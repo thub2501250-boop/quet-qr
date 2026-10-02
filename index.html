@@ -265,7 +265,7 @@ function onQuet(text) {
   if (khoa) return;
   khoa = true;
 
-  phatAmThanh();  // ← THÊM DÒNG NÀY
+  phatAmThanh();  // ← Gọi ở đây
 
   const maSV = text.trim();
   let hanhDong = 'VÀO';
@@ -273,21 +273,6 @@ function onQuet(text) {
   trangThai[maSV] = hanhDong;
 
   const gio = new Date().toLocaleTimeString('vi-VN');
-
-  hienThiKetQua(maSV, hanhDong, gio);
-  guiLenSheets(maSV, hanhDong);
-
-  setTimeout(() => { khoa = false; }, 2000);
-}
-  const maSV = text.trim();
-  let hanhDong = 'VÀO';
-  if (trangThai[maSV] === 'VÀO') hanhDong = 'RA';
-  trangThai[maSV] = hanhDong;
-
-  const gio = new Date().toLocaleTimeString('vi-VN');
-
-  // PHÁT ÂM THANH
-  phatAmThanh(hanhDong === 'VÀO' ? 'vao' : 'ra');
 
   hienThiKetQua(maSV, hanhDong, gio);
   guiLenSheets(maSV, hanhDong);
