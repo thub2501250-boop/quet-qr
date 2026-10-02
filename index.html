@@ -7,7 +7,6 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
     background: linear-gradient(135deg, #003d7a 0%, #00539B 50%, #00AEEF 100%);
@@ -19,27 +18,23 @@
     align-items: center;
     padding: 30px 20px;
   }
-  
-  /* HEADER */
   .header {
     text-align: center;
     margin-bottom: 25px;
     width: 100%;
     max-width: 460px;
   }
-  
   .logo {
-  width: 100%;
-  max-width: 460px;
-  height: auto;
-  margin: 0 auto 25px;
-  display: block;
-  background: #ffffff;
-  padding: 15px 25px;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-}
-  
+    width: 100%;
+    max-width: 460px;
+    height: auto;
+    margin: 0 auto 25px;
+    display: block;
+    background: #ffffff;
+    padding: 15px 25px;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  }
   h1 {
     color: #fff;
     font-size: 26px;
@@ -48,14 +43,11 @@
     text-shadow: 0 2px 10px rgba(0, 174, 239, 0.6);
     letter-spacing: 0.5px;
   }
-  
   .sub {
     color: rgba(255, 255, 255, 0.85);
     font-size: 14px;
     font-weight: 400;
   }
-  
-  /* CONTROLS */
   .controls {
     display: flex;
     gap: 12px;
@@ -64,7 +56,6 @@
     width: 100%;
     max-width: 460px;
   }
-  
   button {
     flex: 1;
     padding: 14px 20px;
@@ -79,31 +70,25 @@
     justify-content: center;
     gap: 8px;
   }
-  
   #btnStart {
     background: #fff;
     color: #00539B;
     box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
   }
-  
   #btnStart:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(255, 255, 255, 0.5);
     background: #E3F2FD;
   }
-  
   #btnStop {
     background: rgba(239, 68, 68, 0.95);
     color: #fff;
   }
-  
   #btnStop:hover {
     transform: translateY(-2px);
     background: #dc2626;
     box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5);
   }
-  
-  /* KHUNG CAMERA - TRỐNG KHI CHƯA BẮT ĐẦU */
   #reader {
     width: 100%;
     max-width: 460px;
@@ -119,8 +104,6 @@
     justify-content: center;
     position: relative;
   }
-  
-  /* Kết quả */
   #result {
     width: 100%;
     max-width: 460px;
@@ -131,53 +114,37 @@
     display: none;
     animation: popIn 0.4s ease;
   }
-  
   @keyframes popIn {
     0% { transform: scale(0.85); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
   }
-  
   #result.vao {
     background: linear-gradient(135deg, #059669, #10b981);
     box-shadow: 0 8px 40px rgba(16, 185, 129, 0.5);
   }
-  
   #result.ra {
     background: linear-gradient(135deg, #ea580c, #f97316);
     box-shadow: 0 8px 40px rgba(249, 115, 22, 0.5);
   }
-  
   #result.err {
     background: linear-gradient(135deg, #dc2626, #ef4444);
   }
-  
   .hanhDong {
     font-size: 42px;
     font-weight: bold;
     color: #fff;
     margin-bottom: 8px;
   }
-  
-  .hoTen {
-    font-size: 22px;
-    font-weight: 600;
-    color: #fff;
-    margin: 8px 0;
-  }
-  
   .maSV {
     font-size: 16px;
     color: rgba(255, 255, 255, 0.9);
     margin-top: 6px;
   }
-  
   .gio {
     font-size: 13px;
     color: rgba(255, 255, 255, 0.75);
     margin-top: 8px;
   }
-  
-  /* Footer */
   .footer {
     margin-top: 40px;
     padding-top: 20px;
@@ -192,39 +159,52 @@
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <img src="logo.png" alt="Đại học Cần Thơ" class="logo" onerror="this.style.display='none'">
   <h1>Quét QR Nhà Xe</h1>
   <p class="sub">Đưa mã QR trên thẻ SV vào camera</p>
 </div>
 
-<!-- CONTROLS -->
 <div class="controls">
   <button id="btnStart" onclick="batDau()">▶️ Bắt đầu</button>
   <button id="btnStop" onclick="dung()">⏹️ Dừng</button>
 </div>
 
-<!-- CAMERA -->
 <div id="reader"></div>
 <div id="result"></div>
 
-<!-- FOOTER -->
 <div class="footer">
   Hệ thống quản lý nhà xe - Đại học Cần Thơ
 </div>
 
 <script>
-// ================================================================
-// URL API - GIỮ NGUYÊN, KHÔNG ĐỔI
-// ================================================================
 const API_URL = "https://script.google.com/macros/s/AKfycbxGop4hmpO05ZWOt-1vxO3iVLionNhy1FZla-GYaiO224PPKQFkrBsfUudhzUredISEfg/exec";
-// ================================================================
 
 let qr, dangQuet = false, khoa = false;
 let trangThai = {};
 
+const amThanh = new Audio('beep.mp3');
+amThanh.volume = 0.6;
+
+function phatAmThanh() {
+  try {
+    amThanh.currentTime = 0;
+    const playPromise = amThanh.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.log('Lỗi phát âm thanh:', e));
+    }
+  } catch (e) {
+    console.log('Lỗi âm thanh:', e);
+  }
+}
+
 function batDau() {
+  // MỞ KHÓA ÂM THANH - fix Chrome autoplay block
+  amThanh.play().then(() => {
+    amThanh.pause();
+    amThanh.currentTime = 0;
+  }).catch(() => {});
+  
   if (dangQuet) return;
   qr = new Html5Qrcode("reader");
   qr.start(
@@ -248,24 +228,12 @@ function dung() {
     });
   }
 }
-// ================================================================
-// ÂM THANH BEEP
-// ================================================================
-const amThanh = new Audio('beep.mp3');
 
-function phatAmThanh() {
-  try {
-    amThanh.currentTime = 0;
-    amThanh.play();
-  } catch (e) {
-    console.log('Lỗi âm thanh:', e);
-  }
-}
 function onQuet(text) {
   if (khoa) return;
   khoa = true;
 
-  phatAmThanh();  // ← Gọi ở đây
+  phatAmThanh();
 
   const maSV = text.trim();
   let hanhDong = 'VÀO';
