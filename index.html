@@ -251,42 +251,34 @@ function dung() {
 // ================================================================
 // ÂM THANH BEEP
 // ================================================================
-function phatAmThanh(loai) {
+const amThanh = new Audio('beep.mp3');
+
+function phatAmThanh() {
   try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    if (loai === 'vao') {
-      // Beep cao - VÀO
-      oscillator.frequency.value = 1200;
-      oscillator.type = 'sine';
-    } else if (loai === 'ra') {
-      // Beep trầm - RA
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-    } else {
-      // Buzz lỗi
-      oscillator.frequency.value = 300;
-      oscillator.type = 'square';
-    }
-    
-    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-    
-    oscillator.start(audioCtx.currentTime);
-    oscillator.stop(audioCtx.currentTime + 0.2);
+    amThanh.currentTime = 0;
+    amThanh.play();
   } catch (e) {
-    console.log('Không phát được âm thanh:', e);
+    console.log('Lỗi âm thanh:', e);
   }
 }
 function onQuet(text) {
   if (khoa) return;
   khoa = true;
 
+  phatAmThanh();  // ← THÊM DÒNG NÀY
+
+  const maSV = text.trim();
+  let hanhDong = 'VÀO';
+  if (trangThai[maSV] === 'VÀO') hanhDong = 'RA';
+  trangThai[maSV] = hanhDong;
+
+  const gio = new Date().toLocaleTimeString('vi-VN');
+
+  hienThiKetQua(maSV, hanhDong, gio);
+  guiLenSheets(maSV, hanhDong);
+
+  setTimeout(() => { khoa = false; }, 2000);
+}
   const maSV = text.trim();
   let hanhDong = 'VÀO';
   if (trangThai[maSV] === 'VÀO') hanhDong = 'RA';
