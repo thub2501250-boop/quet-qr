@@ -99,7 +99,7 @@
   .viTri { 
     font-size: 22px; 
     font-weight: bold; 
-    color: #FFD700; /* Màu vàng nổi bật */
+    color: #FFD700;
     margin: 12px 0; 
     padding: 10px;
     background: rgba(0,0,0,0.2);
@@ -129,16 +129,20 @@
 
 <script>
 // ================================================================
-// ĐÃ CẬP NHẬT URL MỚI CỦA BẠN VÀO ĐÂY
+// ĐÃ CẬP NHẬT URL MỚI NHẤT CỦA BẠN
 // ================================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwUMjqIpWLk_i5C9JAHnblcf_sC-ebi0CAmqHiSNyOISI1cqIEFvNh_PMD98FCWge7sHw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyoe-9FJpUovAaIlzsLWtXoHtTzDtIdRMJvoOtYy2eKO7L-CZPqXNHHW-YFQz1-57RrxA/exec";
 
 let qr, dangQuet = false, khoa = false;
 let trangThai = {};
-let viTriDem = 0; 
+let sttChoA = 0; 
+let sttChoB = 0;
 
 const amThanh = new Audio('beep.mp3');
 amThanh.volume = 0.6;
+
+// Thẻ Audio dùng cho giọng đọc Google
+const audioGoogle = new Audio();
 
 function phatAmThanh() {
   try {
@@ -147,25 +151,25 @@ function phatAmThanh() {
   } catch (e) {}
 }
 
-// ==========================================
-// HÀM ĐỌC GIỌNG NÓI TIẾNG VIỆT (GIỌNG NỮ)
-// ==========================================
+// HÀM ĐỌC GIỌNG NÓI QUA GOOGLE DỊCH (Không lỗi font, chuẩn giọng nữ)
 function docGiongNoi(text) {
-  // Sử dụng giọng đọc của Google Dịch (giọng nữ miền Nam chuẩn)
-  // Cách này không phụ thuộc vào Windows, chạy được trên mọi máy có mạng
   const url = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=" + encodeURIComponent(text);
-  const audioGoogle = new Audio(url);
-  
+  audioGoogle.src = url;
   audioGoogle.play().catch(e => {
     console.log("Lỗi phát âm thanh Google:", e);
   });
 }
 
-window.speechSynthesis.onvoiceschanged = function() {};
-
 function batDau() {
+  // MỒI ÂM THANH ĐỂ LÁCH LUẬT CHẶN AUTOPLAY CỦA CHROME
+  audioGoogle.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+  audioGoogle.play().catch(() => {});
+
   amThanh.play().then(() => { amThanh.pause(); amThanh.currentTime = 0; }).catch(() => {});
+
   if (dangQuet) return;
+  
+  // KHỞI ĐỘNG CAMERA
   qr = new Html5Qrcode("reader");
   qr.start(
     { facingMode: "environment" },
@@ -201,23 +205,36 @@ function onQuet(text) {
 
   const gio = new Date().toLocaleTimeString('vi-VN');
   let viTriHienTai = "";
+  let loHienTai = "A";
 
   if (hanhDong === 'VÀO') {
-    viTriDem++;
-    viTriHienTai = `A-${String(viTriDem).padStart(2, '0')}`;
-    docGiongNoi(`Mời bạn vào lô A, vị trí A ${viTriDem}`);
+    if (sttChoA < 50) {
+      sttChoA++;
+      viTriHienTai = `A-${String(sttChoA).padStart(2, '0')}`;
+      docGiongNoi(`Mời bạn vào lô A, vị trí A ${sttChoA}`);
+    } else if (sttChoB < 45) {
+      sttChoB++;
+      loHienTai = "B";
+      viTriHienTai = `B-${String(sttChoB).padStart(2, '0')}`;
+      docGiongNoi(`Mời bạn vào lô B, vị trí B ${sttChoB}`);
+    } else {
+      viTriHienTai = "Bãi đã hết chỗ";
+      docGiongNoi(`Xin lỗi, bãi xe đã hết chỗ`);
+    }
   } else {
     viTriHienTai = "Đã ra khỏi bãi";
     docGiongNoi(`Tạm biệt bạn`);
   }
 
-  hienThiKetQua(maSV, hanhDong, gio, viTriHienTai);
-  guiLenSheets(maSV, hanhDong);
+  hienThiKetQua(maSV, hanhDong, gio, loHienTai, viTriHienTai);
+  
+  // Gửi kèm Lô và Vị trí lên Google Sheets
+  guiLenSheets(maSV, hanhDong, loHienTai, viTriHienTai);
 
   setTimeout(() => { khoa = false; }, 3000); 
 }
 
-function hienThiKetQua(maSV, hanhDong, gio, viTri) {
+function hienThiKetQua(maSV, hanhDong, gio, loHienTai, viTri) {
   const el = document.getElementById('result');
   el.className = hanhDong === 'VÀO' ? '' : 'ra';
   el.style.display = 'block';
@@ -228,19 +245,26 @@ function hienThiKetQua(maSV, hanhDong, gio, viTri) {
   `;
   
   if (hanhDong === 'VÀO') {
-    html += `<div class="viTri">📍 Lô A - Chỗ ${viTri}</div>`;
+    html += `<div class="viTri">📍 Lô ${loHienTai} - Chỗ ${viTri}</div>`;
+  } else {
+    html += `<div class="viTri" style="color: white; background: transparent;">👋 ${viTri}</div>`;
   }
 
   html += `<div class="gio">🕐 ${gio}</div>`;
   el.innerHTML = html;
 }
 
-function guiLenSheets(maSV, hanhDong) {
+function guiLenSheets(maSV, hanhDong, maLo, viTri) {
   fetch(API_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ maSV: maSV, hanhDong: hanhDong })
+    body: JSON.stringify({ 
+      maSV: maSV, 
+      hanhDong: hanhDong,
+      maLo: maLo,       // Gửi mã lô
+      viTri: viTri      // Gửi vị trí chỗ
+    })
   }).catch(e => console.log('Gửi lỗi:', e));
 }
 </script>
