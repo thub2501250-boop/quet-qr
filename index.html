@@ -151,31 +151,14 @@ function phatAmThanh() {
 // HÀM ĐỌC GIỌNG NÓI TIẾNG VIỆT (GIỌNG NỮ)
 // ==========================================
 function docGiongNoi(text) {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel(); // Cắt âm thanh đang đọc dở
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'vi-VN'; // Đặt ngôn ngữ tiếng Việt
-    utterance.rate = 0.9;     // Tốc độ đọc chậm lại cho rõ
-    utterance.pitch = 1.2;    // Tăng pitch để giọng cao hơn (giống nữ)
-
-    const voices = window.speechSynthesis.getVoices();
-    
-    // Tìm giọng Tiếng Việt (ưu tiên giọng nữ)
-    let vietnameseVoice = voices.find(voice => 
-      voice.lang.includes('vi') && (voice.name.includes('Female') || voice.name.includes('Google') || voice.name.includes('Nữ'))
-    );
-    
-    if (!vietnameseVoice) {
-      vietnameseVoice = voices.find(voice => voice.lang.includes('vi'));
-    }
-
-    if (vietnameseVoice) {
-      utterance.voice = vietnameseVoice;
-    }
-
-    window.speechSynthesis.speak(utterance);
-  }
+  // Sử dụng giọng đọc của Google Dịch (giọng nữ miền Nam chuẩn)
+  // Cách này không phụ thuộc vào Windows, chạy được trên mọi máy có mạng
+  const url = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=" + encodeURIComponent(text);
+  const audioGoogle = new Audio(url);
+  
+  audioGoogle.play().catch(e => {
+    console.log("Lỗi phát âm thanh Google:", e);
+  });
 }
 
 window.speechSynthesis.onvoiceschanged = function() {};
