@@ -128,11 +128,13 @@
 <div class="footer">Hệ thống quản lý nhà xe - Đại học Cần Thơ</div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxGop4hmpO05ZWOt-1vxO3iVLionNhy1FZla-GYaiO224PPKQFkrBsfUudhzUredISEfg/exec";
+// ================================================================
+// ĐÃ CẬP NHẬT URL MỚI CỦA BẠN VÀO ĐÂY
+// ================================================================
+const API_URL = "https://script.google.com/macros/s/AKfycbwUMjqIpWLk_i5C9JAHnblcf_sC-ebi0CAmqHiSNyOISI1cqIEFvNh_PMD98FCWge7sHw/exec";
 
 let qr, dangQuet = false, khoa = false;
 let trangThai = {};
-// Biến đếm vị trí cho demo
 let viTriDem = 0; 
 
 const amThanh = new Audio('beep.mp3');
@@ -145,16 +147,38 @@ function phatAmThanh() {
   } catch (e) {}
 }
 
-// HÀM ĐỌC GIỌNG NÓI TIẾNG VIỆT
+// ==========================================
+// HÀM ĐỌC GIỌNG NÓI TIẾNG VIỆT (GIỌNG NỮ)
+// ==========================================
 function docGiongNoi(text) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel(); // Cắt âm thanh đang đọc dở
+    
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'vi-VN'; // Giọng Việt Nam
-    utterance.rate = 1.0;
+    utterance.lang = 'vi-VN'; // Đặt ngôn ngữ tiếng Việt
+    utterance.rate = 0.9;     // Tốc độ đọc chậm lại cho rõ
+    utterance.pitch = 1.2;    // Tăng pitch để giọng cao hơn (giống nữ)
+
+    const voices = window.speechSynthesis.getVoices();
+    
+    // Tìm giọng Tiếng Việt (ưu tiên giọng nữ)
+    let vietnameseVoice = voices.find(voice => 
+      voice.lang.includes('vi') && (voice.name.includes('Female') || voice.name.includes('Google') || voice.name.includes('Nữ'))
+    );
+    
+    if (!vietnameseVoice) {
+      vietnameseVoice = voices.find(voice => voice.lang.includes('vi'));
+    }
+
+    if (vietnameseVoice) {
+      utterance.voice = vietnameseVoice;
+    }
+
     window.speechSynthesis.speak(utterance);
   }
 }
+
+window.speechSynthesis.onvoiceschanged = function() {};
 
 function batDau() {
   amThanh.play().then(() => { amThanh.pause(); amThanh.currentTime = 0; }).catch(() => {});
@@ -195,29 +219,19 @@ function onQuet(text) {
   const gio = new Date().toLocaleTimeString('vi-VN');
   let viTriHienTai = "";
 
-  // LOGIC DEMO: Nếu VÀO thì tự tăng vị trí, nếu RA thì xóa vị trí
   if (hanhDong === 'VÀO') {
     viTriDem++;
-    viTriHienTai = `A-${String(viTriDem).padStart(2, '0')}`; // Tạo chữ A-01, A-02
+    viTriHienTai = `A-${String(viTriDem).padStart(2, '0')}`;
+    docGiongNoi(`Mời bạn vào lô A, vị trí A ${viTriDem}`);
   } else {
     viTriHienTai = "Đã ra khỏi bãi";
-    viTriDem = Math.max(0, viTriDem - 1);
-  }
-
-  // 1. Đọc giọng nói
-  if (hanhDong === 'VÀO') {
-    docGiongNoi(`Mời bạn vào lô A, vị trí ${viTriHienTai.replace('-', ' ')}`);
-  } else {
     docGiongNoi(`Tạm biệt bạn`);
   }
 
-  // 2. Hiển thị lên màn hình
   hienThiKetQua(maSV, hanhDong, gio, viTriHienTai);
-  
-  // 3. Gửi lên Google Sheets (chỉ gửi VÀO/RA, chưa gửi vị trí vì demo)
   guiLenSheets(maSV, hanhDong);
 
-  setTimeout(() => { khoa = false; }, 3000); // Đợi 3s cho đọc xong
+  setTimeout(() => { khoa = false; }, 3000); 
 }
 
 function hienThiKetQua(maSV, hanhDong, gio, viTri) {
