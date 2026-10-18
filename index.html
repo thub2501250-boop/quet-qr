@@ -41,12 +41,10 @@
     font-weight: 700;
     margin-bottom: 6px;
     text-shadow: 0 2px 10px rgba(0, 174, 239, 0.6);
-    letter-spacing: 0.5px;
   }
   .sub {
     color: rgba(255, 255, 255, 0.85);
     font-size: 14px;
-    font-weight: 400;
   }
   .controls {
     display: flex;
@@ -65,30 +63,10 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
   }
-  #btnStart {
-    background: #fff;
-    color: #00539B;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
-  }
-  #btnStart:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.5);
-    background: #E3F2FD;
-  }
-  #btnStop {
-    background: rgba(239, 68, 68, 0.95);
-    color: #fff;
-  }
-  #btnStop:hover {
-    transform: translateY(-2px);
-    background: #dc2626;
-    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5);
-  }
+  #btnStart { background: #fff; color: #00539B; }
+  #btnStop { background: rgba(239, 68, 68, 0.95); color: #fff; }
+  
   #reader {
     width: 100%;
     max-width: 460px;
@@ -97,12 +75,9 @@
     border-radius: 20px;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3),
-                inset 0 0 30px rgba(79, 195, 247, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
   }
   #result {
     width: 100%;
@@ -112,13 +87,6 @@
     border-radius: 20px;
     text-align: center;
     display: none;
-    animation: popIn 0.4s ease;
-  }
-  @keyframes popIn {
-    0% { transform: scale(0.85); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  #result.vao {
     background: linear-gradient(135deg, #059669, #10b981);
     box-shadow: 0 8px 40px rgba(16, 185, 129, 0.5);
   }
@@ -126,35 +94,19 @@
     background: linear-gradient(135deg, #ea580c, #f97316);
     box-shadow: 0 8px 40px rgba(249, 115, 22, 0.5);
   }
-  #result.err {
-    background: linear-gradient(135deg, #dc2626, #ef4444);
+  .hanhDong { font-size: 42px; font-weight: bold; color: #fff; margin-bottom: 8px; }
+  .maSV { font-size: 16px; color: rgba(255, 255, 255, 0.9); margin-top: 6px; }
+  .viTri { 
+    font-size: 22px; 
+    font-weight: bold; 
+    color: #FFD700; /* Màu vàng nổi bật */
+    margin: 12px 0; 
+    padding: 10px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
   }
-  .hanhDong {
-    font-size: 42px;
-    font-weight: bold;
-    color: #fff;
-    margin-bottom: 8px;
-  }
-  .maSV {
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.9);
-    margin-top: 6px;
-  }
-  .gio {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.75);
-    margin-top: 8px;
-  }
-  .footer {
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 12px;
-    text-align: center;
-    max-width: 460px;
-    width: 100%;
-  }
+  .gio { font-size: 13px; color: rgba(255, 255, 255, 0.75); margin-top: 8px; }
+  .footer { margin-top: 40px; color: rgba(255, 255, 255, 0.6); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -173,15 +125,15 @@
 <div id="reader"></div>
 <div id="result"></div>
 
-<div class="footer">
-  Hệ thống quản lý nhà xe - Đại học Cần Thơ
-</div>
+<div class="footer">Hệ thống quản lý nhà xe - Đại học Cần Thơ</div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwUMjqIpWLk_i5C9JAHnblcf_sC-ebi0CAmqHiSNyOISI1cqIEFvNh_PMD98FCWge7sHw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxGop4hmpO05ZWOt-1vxO3iVLionNhy1FZla-GYaiO224PPKQFkrBsfUudhzUredISEfg/exec";
 
 let qr, dangQuet = false, khoa = false;
 let trangThai = {};
+// Biến đếm vị trí cho demo
+let viTriDem = 0; 
 
 const amThanh = new Audio('beep.mp3');
 amThanh.volume = 0.6;
@@ -189,22 +141,23 @@ amThanh.volume = 0.6;
 function phatAmThanh() {
   try {
     amThanh.currentTime = 0;
-    const playPromise = amThanh.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(e => console.log('Lỗi phát âm thanh:', e));
-    }
-  } catch (e) {
-    console.log('Lỗi âm thanh:', e);
+    amThanh.play().catch(e => console.log('Lỗi beep:', e));
+  } catch (e) {}
+}
+
+// HÀM ĐỌC GIỌNG NÓI TIẾNG VIỆT
+function docGiongNoi(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel(); // Cắt âm thanh đang đọc dở
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'vi-VN'; // Giọng Việt Nam
+    utterance.rate = 1.0;
+    window.speechSynthesis.speak(utterance);
   }
 }
 
 function batDau() {
-  // MỞ KHÓA ÂM THANH - fix Chrome autoplay block
-  amThanh.play().then(() => {
-    amThanh.pause();
-    amThanh.currentTime = 0;
-  }).catch(() => {});
-  
+  amThanh.play().then(() => { amThanh.pause(); amThanh.currentTime = 0; }).catch(() => {});
   if (dangQuet) return;
   qr = new Html5Qrcode("reader");
   qr.start(
@@ -215,8 +168,7 @@ function batDau() {
   ).then(() => { 
     dangQuet = true;
     document.getElementById('reader').style.minHeight = 'auto';
-  })
-   .catch(e => alert("Không mở được camera: " + e));
+  }).catch(e => alert("Không mở được camera: " + e));
 }
 
 function dung() {
@@ -241,22 +193,49 @@ function onQuet(text) {
   trangThai[maSV] = hanhDong;
 
   const gio = new Date().toLocaleTimeString('vi-VN');
+  let viTriHienTai = "";
 
-  hienThiKetQua(maSV, hanhDong, gio);
+  // LOGIC DEMO: Nếu VÀO thì tự tăng vị trí, nếu RA thì xóa vị trí
+  if (hanhDong === 'VÀO') {
+    viTriDem++;
+    viTriHienTai = `A-${String(viTriDem).padStart(2, '0')}`; // Tạo chữ A-01, A-02
+  } else {
+    viTriHienTai = "Đã ra khỏi bãi";
+    viTriDem = Math.max(0, viTriDem - 1);
+  }
+
+  // 1. Đọc giọng nói
+  if (hanhDong === 'VÀO') {
+    docGiongNoi(`Mời bạn vào lô A, vị trí ${viTriHienTai.replace('-', ' ')}`);
+  } else {
+    docGiongNoi(`Tạm biệt bạn`);
+  }
+
+  // 2. Hiển thị lên màn hình
+  hienThiKetQua(maSV, hanhDong, gio, viTriHienTai);
+  
+  // 3. Gửi lên Google Sheets (chỉ gửi VÀO/RA, chưa gửi vị trí vì demo)
   guiLenSheets(maSV, hanhDong);
 
-  setTimeout(() => { khoa = false; }, 2000);
+  setTimeout(() => { khoa = false; }, 3000); // Đợi 3s cho đọc xong
 }
 
-function hienThiKetQua(maSV, hanhDong, gio) {
+function hienThiKetQua(maSV, hanhDong, gio, viTri) {
   const el = document.getElementById('result');
-  el.className = hanhDong === 'VÀO' ? 'vao' : 'ra';
+  el.className = hanhDong === 'VÀO' ? '' : 'ra';
   el.style.display = 'block';
-  el.innerHTML = `
+  
+  let html = `
     <div class="hanhDong">${hanhDong === 'VÀO' ? '🟢 VÀO' : '🟠 RA'}</div>
     <div class="maSV">MSSV: ${maSV}</div>
-    <div class="gio">🕐 ${gio}</div>
   `;
+  
+  if (hanhDong === 'VÀO') {
+    html += `<div class="viTri">📍 Lô A - Chỗ ${viTri}</div>`;
+  }
+
+  html += `<div class="gio">🕐 ${gio}</div>`;
+  el.innerHTML = html;
 }
 
 function guiLenSheets(maSV, hanhDong) {
