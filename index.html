@@ -99,7 +99,7 @@
   .viTri { 
     font-size: 22px; 
     font-weight: bold; 
-    color: #FFD700;
+    color: #FFD700; 
     margin: 12px 0; 
     padding: 10px;
     background: rgba(0,0,0,0.2);
@@ -129,20 +129,20 @@
 
 <script>
 // ================================================================
-// ĐÃ CẬP NHẬT URL MỚI NHẤT CỦA BẠN
+// URL API CỦA BẠN
 // ================================================================
 const API_URL = "https://script.google.com/macros/s/AKfycbyoe-9FJpUovAaIlzsLWtXoHtTzDtIdRMJvoOtYy2eKO7L-CZPqXNHHW-YFQz1-57RrxA/exec";
 
 let qr, dangQuet = false, khoa = false;
 let trangThai = {};
 let sttChoA = 0; 
-let sttChoB = 0;
 
+// Âm thanh Beep
 const amThanh = new Audio('beep.mp3');
 amThanh.volume = 0.6;
 
-// Thẻ Audio dùng cho giọng đọc Google
-const audioGoogle = new Audio();
+// Âm thanh đọc vị trí (Dùng chung 1 thẻ Audio để phát các file A01, A02...)
+const audioPlayer = new Audio();
 
 function phatAmThanh() {
   try {
@@ -151,25 +151,34 @@ function phatAmThanh() {
   } catch (e) {}
 }
 
-// HÀM ĐỌC GIỌNG NÓI QUA GOOGLE DỊCH (Không lỗi font, chuẩn giọng nữ)
-function docGiongNoi(text) {
-  const url = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=" + encodeURIComponent(text);
-  audioGoogle.src = url;
-  audioGoogle.play().catch(e => {
-    console.log("Lỗi phát âm thanh Google:", e);
-  });
+// ==========================================
+// HÀM ĐỌC ÂM THANH TỪ FILE CÓ SẴN
+// ==========================================
+function docGiongNoi(soViTri) {
+  if (soViTri > 0) {
+    // Nếu là VÀO (soViTri từ 1 đến 10)
+    if (soViTri <= 10) {
+      audioPlayer.src = `A${String(soViTri).padStart(2, '0')}.mp3`;
+    } else {
+      audioPlayer.src = `A10.mp3`; // Phòng hờ nếu quá 10
+    }
+    audioPlayer.play().catch(e => console.log('Lỗi phát file âm thanh:', e));
+  } else {
+    // Nếu là RA (soViTri = 0)
+    audioPlayer.src = `ra.mp3`;
+    audioPlayer.play().catch(e => console.log('Lỗi phát file âm thanh:', e));
+  }
 }
 
 function batDau() {
   // MỒI ÂM THANH ĐỂ LÁCH LUẬT CHẶN AUTOPLAY CỦA CHROME
-  audioGoogle.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-  audioGoogle.play().catch(() => {});
+  audioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+  audioPlayer.play().catch(() => {});
 
   amThanh.play().then(() => { amThanh.pause(); amThanh.currentTime = 0; }).catch(() => {});
 
   if (dangQuet) return;
   
-  // KHỞI ĐỘNG CAMERA
   qr = new Html5Qrcode("reader");
   qr.start(
     { facingMode: "environment" },
@@ -196,7 +205,7 @@ function onQuet(text) {
   if (khoa) return;
   khoa = true;
 
-  phatAmThanh();
+  phatAmThanh(); // Tiếng bíp
 
   const maSV = text.trim();
   let hanhDong = 'VÀO';
@@ -205,33 +214,31 @@ function onQuet(text) {
 
   const gio = new Date().toLocaleTimeString('vi-VN');
   let viTriHienTai = "";
+  let soViTri = 0;
   let loHienTai = "A";
 
   if (hanhDong === 'VÀO') {
-    if (sttChoA < 50) {
+    if (sttChoA < 10) { // Giới hạn demo 10 chỗ
       sttChoA++;
+      soViTri = sttChoA;
       viTriHienTai = `A-${String(sttChoA).padStart(2, '0')}`;
-      docGiongNoi(`Mời bạn vào lô A, vị trí A ${sttChoA}`);
-    } else if (sttChoB < 45) {
-      sttChoB++;
-      loHienTai = "B";
-      viTriHienTai = `B-${String(sttChoB).padStart(2, '0')}`;
-      docGiongNoi(`Mời bạn vào lô B, vị trí B ${sttChoB}`);
+      docGiongNoi(soViTri); 
     } else {
       viTriHienTai = "Bãi đã hết chỗ";
-      docGiongNoi(`Xin lỗi, bãi xe đã hết chỗ`);
+      docGiongNoi(0); // Bạn có thể tạo thêm file hetcho.mp3 và sửa hàm nếu muốn
     }
   } else {
     viTriHienTai = "Đã ra khỏi bãi";
-    docGiongNoi(`Tạm biệt bạn`);
+    docGiongNoi(0); // Gọi file ra.mp3
   }
 
   hienThiKetQua(maSV, hanhDong, gio, loHienTai, viTriHienTai);
   
-  // Gửi kèm Lô và Vị trí lên Google Sheets
+  // Gửi lên Google Sheets
   guiLenSheets(maSV, hanhDong, loHienTai, viTriHienTai);
 
-  setTimeout(() => { khoa = false; }, 3000); 
+  // Đợi 4 giây để âm thanh đọc xong mới cho quét tiếp
+  setTimeout(() => { khoa = false; }, 4000); 
 }
 
 function hienThiKetQua(maSV, hanhDong, gio, loHienTai, viTri) {
@@ -262,8 +269,8 @@ function guiLenSheets(maSV, hanhDong, maLo, viTri) {
     body: JSON.stringify({ 
       maSV: maSV, 
       hanhDong: hanhDong,
-      maLo: maLo,       // Gửi mã lô
-      viTri: viTri      // Gửi vị trí chỗ
+      maLo: maLo,       
+      viTri: viTri      
     })
   }).catch(e => console.log('Gửi lỗi:', e));
 }
