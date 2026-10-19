@@ -137,11 +137,12 @@ let qr, dangQuet = false, khoa = false;
 let trangThai = {};
 let sttChoA = 0; 
 
-// Âm thanh Beep
+// Mảng lưu các chỗ đang trống (để tái sử dụng khi có xe ra)
+let choTrong = []; 
+
 const amThanh = new Audio('beep.mp3');
 amThanh.volume = 0.6;
 
-// Âm thanh đọc vị trí (Dùng chung 1 thẻ Audio để phát các file A01, A02...)
 const audioPlayer = new Audio();
 
 function phatAmThanh() {
@@ -151,30 +152,26 @@ function phatAmThanh() {
   } catch (e) {}
 }
 
-// ==========================================
-// HÀM ĐỌC ÂM THANH TỪ FILE CÓ SẴN
-// ==========================================
+// Hàm đọc âm thanh (chỉ dùng cho VÀO)
 function docGiongNoi(soViTri) {
   if (soViTri > 0) {
-    // Nếu là VÀO (soViTri từ 1 đến 10)
     if (soViTri <= 10) {
       audioPlayer.src = `A${String(soViTri).padStart(2, '0')}.mp3`;
     } else {
-      audioPlayer.src = `A10.mp3`; // Phòng hờ
+      audioPlayer.src = `A10.mp3`; 
     }
     audioPlayer.play().catch(e => console.log('Lỗi phát file âm thanh:', e));
   }
-  // Bỏ phần đọc file ra.mp3 vì bạn không dùng
 }
 
 function batDau() {
-  // MỒI ÂM THANH ĐỂ LÁCH LUẬT CHẶN AUTOPLAY CỦA CHROME
+  // Mồi âm thanh chống chặn autoplay
   audioPlayer.src = "A01.mp3"; 
-  audioPlayer.volume = 0; // Tắt tiếng lúc mồi
+  audioPlayer.volume = 0; 
   audioPlayer.play().then(() => {
       audioPlayer.pause();
       audioPlayer.currentTime = 0;
-      audioPlayer.volume = 1; // Mở lại âm lượng
+      audioPlayer.volume = 1; 
   }).catch(e => console.log("Lỗi mồi âm thanh:", e));
 
   amThanh.play().then(() => { amThanh.pause(); amThanh.currentTime = 0; }).catch(() => {});
@@ -207,31 +204,55 @@ function onQuet(text) {
   if (khoa) return;
   khoa = true;
 
-  phatAmThanh(); // Tiếng bíp khi quét
+  phatAmThanh(); 
 
   const maSV = text.trim();
   let hanhDong = 'VÀO';
-  if (trangThai[maSV] === 'VÀO') hanhDong = 'RA';
+  
+  if (trangThai[maSV] === 'VÀO') {
+    hanhDong = 'RA';
+  } else {
+    hanhDong = 'VÀO';
+  }
   trangThai[maSV] = hanhDong;
 
   const gio = new Date().toLocaleTimeString('vi-VN');
   let viTriHienTai = "";
-  let soViTri = 0;
   let loHienTai = "A";
+  let soViTri = 0;
 
   if (hanhDong === 'VÀO') {
-    if (sttChoA < 10) { // Giới hạn demo 10 chỗ
+    // Nếu có chỗ trống do xe trước đã ra, ưu tiên lấp vào
+    if (choTrong.length > 0) {
+      soViTri = choTrong.shift(); 
+    } 
+    // Nếu không có chỗ trống, cấp số tiếp theo
+    else if (sttChoA < 10) { 
       sttChoA++;
       soViTri = sttChoA;
-      viTriHienTai = `A-${String(sttChoA).padStart(2, '0')}`;
-      docGiongNoi(soViTri); 
-    } else {
+    } 
+    else {
       viTriHienTai = "Bãi đã hết chỗ";
-      // Không đọc âm thanh vì không có file hetcho.mp3
+      hienThiKetQua(maSV, hanhDong, gio, loHienTai, viTriHienTai);
+      guiLenSheets(maSV, hanhDong, loHienTai, viTriHienTai);
+      setTimeout(() => { khoa = false; }, 3000); 
+      return;
     }
+
+    viTriHienTai = `A-${String(soViTri).padStart(2, '0')}`;
+    docGiongNoi(soViTri);
+    
+    // Lưu lại vị trí của SV này để lúc RA trả lại
+    trangThai[maSV + "_vitri"] = soViTri; 
+
   } else {
+    // Khi RA: Lấy lại vị trí cũ và đưa vào danh sách trống
+    let viTriCu = trangThai[maSV + "_vitri"];
+    if (viTriCu) {
+      choTrong.push(viTriCu); 
+      choTrong.sort((a, b) => a - b); 
+    }
     viTriHienTai = "Đã ra khỏi bãi";
-    // Không gọi docGiongNoi(0) vì đã bỏ file ra.mp3
   }
 
   hienThiKetQua(maSV, hanhDong, gio, loHienTai, viTriHienTai);
@@ -239,7 +260,6 @@ function onQuet(text) {
   // Gửi lên Google Sheets
   guiLenSheets(maSV, hanhDong, loHienTai, viTriHienTai);
 
-  // Đợi 3 giây để âm thanh đọc xong mới cho quét tiếp
   setTimeout(() => { khoa = false; }, 3000); 
 }
 
