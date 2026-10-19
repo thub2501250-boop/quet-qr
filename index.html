@@ -160,20 +160,22 @@ function docGiongNoi(soViTri) {
     if (soViTri <= 10) {
       audioPlayer.src = `A${String(soViTri).padStart(2, '0')}.mp3`;
     } else {
-      audioPlayer.src = `A10.mp3`; // Phòng hờ nếu quá 10
+      audioPlayer.src = `A10.mp3`; // Phòng hờ
     }
     audioPlayer.play().catch(e => console.log('Lỗi phát file âm thanh:', e));
-  } else {
-    // Nếu là RA (soViTri = 0)
-    audioPlayer.src = `ra.mp3`;
-    audioPlayer.play().catch(e => console.log('Lỗi phát file âm thanh:', e));
   }
+  // Bỏ phần đọc file ra.mp3 vì bạn không dùng
 }
 
 function batDau() {
   // MỒI ÂM THANH ĐỂ LÁCH LUẬT CHẶN AUTOPLAY CỦA CHROME
-  audioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-  audioPlayer.play().catch(() => {});
+  audioPlayer.src = "A01.mp3"; 
+  audioPlayer.volume = 0; // Tắt tiếng lúc mồi
+  audioPlayer.play().then(() => {
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+      audioPlayer.volume = 1; // Mở lại âm lượng
+  }).catch(e => console.log("Lỗi mồi âm thanh:", e));
 
   amThanh.play().then(() => { amThanh.pause(); amThanh.currentTime = 0; }).catch(() => {});
 
@@ -205,7 +207,7 @@ function onQuet(text) {
   if (khoa) return;
   khoa = true;
 
-  phatAmThanh(); // Tiếng bíp
+  phatAmThanh(); // Tiếng bíp khi quét
 
   const maSV = text.trim();
   let hanhDong = 'VÀO';
@@ -225,11 +227,11 @@ function onQuet(text) {
       docGiongNoi(soViTri); 
     } else {
       viTriHienTai = "Bãi đã hết chỗ";
-      docGiongNoi(0); // Bạn có thể tạo thêm file hetcho.mp3 và sửa hàm nếu muốn
+      // Không đọc âm thanh vì không có file hetcho.mp3
     }
   } else {
     viTriHienTai = "Đã ra khỏi bãi";
-    docGiongNoi(0); // Gọi file ra.mp3
+    // Không gọi docGiongNoi(0) vì đã bỏ file ra.mp3
   }
 
   hienThiKetQua(maSV, hanhDong, gio, loHienTai, viTriHienTai);
@@ -237,8 +239,8 @@ function onQuet(text) {
   // Gửi lên Google Sheets
   guiLenSheets(maSV, hanhDong, loHienTai, viTriHienTai);
 
-  // Đợi 4 giây để âm thanh đọc xong mới cho quét tiếp
-  setTimeout(() => { khoa = false; }, 4000); 
+  // Đợi 3 giây để âm thanh đọc xong mới cho quét tiếp
+  setTimeout(() => { khoa = false; }, 3000); 
 }
 
 function hienThiKetQua(maSV, hanhDong, gio, loHienTai, viTri) {
