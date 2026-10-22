@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MyCTU - Bãi Xe Thông Minh</title>
+<title>CTU-SVP - Bãi Xe Thông Minh</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; color: #1e293b; min-height: 100vh; padding-bottom: 30px; }
   
-  /* Navbar giả lập App MyCTU */
+  /* Navbar giả lập App */
   .navbar { background: #00539B; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   .navbar-left { display: flex; align-items: center; gap: 10px; }
   .navbar img { height: 35px; background: white; border-radius: 5px; padding: 2px; }
@@ -53,8 +53,8 @@
   <div class="navbar-left">
     <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
     <div>
-      <div style="font-size: 18px; font-weight: bold;">MyCTU</div>
-      <div style="font-size: 12px;">Bãi xe thông minh</div>
+      <div style="font-size: 18px; font-weight: bold;">CTU-SVP</div>
+      <div style="font-size: 12px;">Smart Vehicle Parking</div>
     </div>
   </div>
   <div class="navbar-right" id="user-info" style="display:none;">
@@ -99,13 +99,13 @@ function dangNhap() {
   
   mssvHienTai = input.toUpperCase();
   // Lưu lại MSSV vào trình duyệt để lần sau vào không cần nhập lại
-  localStorage.setItem('myctu_mssv', mssvHienTai); 
+  localStorage.setItem('ctu_svp_mssv', mssvHienTai); 
   
   hienThiTrangChu();
 }
 
 function dangXuat() {
-  localStorage.removeItem('myctu_mssv');
+  localStorage.removeItem('ctu_svp_mssv');
   location.reload();
 }
 
@@ -171,7 +171,7 @@ async function taiDuLieu() {
 
 // Khi tải trang, kiểm tra xem đã đăng nhập chưa
 window.onload = () => {
-  const savedMssv = localStorage.getItem('myctu_mssv');
+  const savedMssv = localStorage.getItem('ctu_svp_mssv');
   if (savedMssv) {
     mssvHienTai = savedMssv;
     hienThiTrangChu();
